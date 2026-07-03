@@ -7,11 +7,12 @@ This is a tool for compressing and decompressing files, using the Run Length Enc
 # How to run it
 
 The different modes supported are:
-    -cB (compress bmp)
-    -dB (decompress bmp)
+<br>
+-cB (compress bmp)
+-dB (decompress bmp)
 
 $ make
-$ ./rle_tool <mode> <input_path> <output_path>
+$ ./rle_tool mode input_path output_path
 
 
 
