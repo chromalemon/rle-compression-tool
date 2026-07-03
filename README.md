@@ -12,9 +12,11 @@ The different modes supported are:
 <br>
 -dB (decompress bmp)
 
-$ make
+<p>$ git clone https://github.com/chromalemon/Custom-RLE-Compression-Suite</p>
 <br>
-$ ./rle_tool mode input_path output_path
+<p>$ make</p>
+<br>
+<p>$ ./rle_tool mode input_path output_path</p>
 
 
 
