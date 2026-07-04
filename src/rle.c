@@ -28,7 +28,8 @@ int compress(uint8_t *inp_buf, size_t inp_size, uint8_t *out_buf, uint8_t **out_
 		}
 		curr_block += block_size;
 	}
-	if (count > 0 && write_to_buf(out_buf, out_ptr, block_size, max_out_size, count, prev_block) != 1){
+	if (count > 0 && !write_to_buf(out_buf, out_ptr, block_size, max_out_size, count, prev_block)){
+		printf("%d\n", count);
 		perror("Could not write to output buffer.\n");
 		return 0;
 	}
@@ -40,6 +41,7 @@ int compress(uint8_t *inp_buf, size_t inp_size, uint8_t *out_buf, uint8_t **out_
 int write_to_buf(uint8_t *out_buf, uint8_t **out_ptr, const uint16_t block_size, const size_t max_out_size, const uint8_t count, const uint8_t *prev_block){
 	size_t curr_size = *out_ptr - out_buf;
 	if (curr_size + 1 + block_size > max_out_size){
+		printf("%zu, %zu\n", curr_size, max_out_size);
 		return 0;
 	}
 	
@@ -70,6 +72,7 @@ int decompress(uint8_t *inp_buf, size_t inp_size, uint8_t *out_buf, uint8_t **ou
 		curr_block += block_size + 1;
 	}
 
+	printf("Decompression complete.\n");
 	return 1;
 	
 }

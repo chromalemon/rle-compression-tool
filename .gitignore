@@ -1,3 +1,7 @@
+# Sample files for testing
+*.bmp
+*.rle
+
 # Prerequisites
 *.d
 

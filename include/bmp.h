@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BMP_DEFAULTS = { .file_type = 0x4D42, .reserved1 = 0, .reserved2 = 0, .offset = 54, .DIB_size = 40, .planes = 1, .compression = 0, .x_res = 2835, .y_res = 2835, .colors_used = 0, .colors_important = 0 }
+#define BMP_DEFAULTS .file_type = 0x4D42, .reserved1 = 0, .reserved2 = 0, .offset = 54, .DIB_size = 40, .planes = 1, .compression = 0, .x_res = 2835, .y_res = 2835, .colors_used = 0, .colors_important = 0
 
 #pragma pack(push, 1)
 typedef struct BMP_meta {

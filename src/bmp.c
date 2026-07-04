@@ -7,6 +7,7 @@ void decompress_bmp(const char* input_path, const char* output_path){
 	FILE* outfile = NULL;
 	uint8_t *inp_buf = NULL;
 	uint8_t *out_buf = NULL;
+	int res = 0;
 
 	infile = fopen(input_path, "rb");
 	if (!infile){
@@ -16,21 +17,26 @@ void decompress_bmp(const char* input_path, const char* output_path){
 	
 	BMP_meta meta;	
 
+	/*
 	if (!fread(&(meta.width), 4, 1, infile) || !fread(&(meta.height), 4, 1 , infile) || !fread(&(meta.BPP), 2, 1, infile)){
 		perror("Could not read file.\n");
 		goto cleanup;
 	}
-	
+	*/
+
+	res = read_meta(infile, &meta);
+	if (res == 0){
+		perror("Could not read file meta.\n");
+		goto cleanup;
+	}
+
+
 	size_t unpadded_row_length = (meta.width * meta.BPP) / 8;
 	size_t total_padded_row_length = ((unpadded_row_length + 3) / 4) * 4;
 	uint8_t padding_bytes_to_skip = total_padded_row_length - unpadded_row_length;
-	uint32_t image_size = total_padded_row_length * meta.height;
 	size_t max_out_size = meta.height * unpadded_row_length;
 	uint16_t block_size = meta.BPP / 8;
 	uint8_t zero = 0;	
-
-	meta.image_size = image_size;
-	meta.file_size = image_size + 54;
 
 	outfile = fopen(output_path, "wb");
 	if (!outfile){
@@ -42,21 +48,20 @@ void decompress_bmp(const char* input_path, const char* output_path){
 		perror("Could not write BMP header.\n");
 		goto cleanup;
 	}
-
-	size_t payload_size = calc_file_size(input_path) - 54;
+	
+	long curr_size = calc_file_size(input_path);
+	size_t payload_size = curr_size - meta.offset;
 	inp_buf = malloc(payload_size);
 
 	if (inp_buf == NULL){
 		perror("Could not allocate memory.\n");
 		goto cleanup;
 	}
-	uint8_t *inp_ptr = inp_buf;
-	
-	if (fread(inp_ptr, 1, payload_size, infile) < payload_size){
-		perror("Could not read file.\n");
+
+	if (fread(inp_buf, 1, payload_size, infile) < payload_size){
+		perror("1Could not read file.\n");
 		goto cleanup;
 	}	
-
 	out_buf = malloc(max_out_size);
 	if (out_buf == NULL){
 		perror("Could not allocate memory.\n");
@@ -65,7 +70,7 @@ void decompress_bmp(const char* input_path, const char* output_path){
 
 	uint8_t *out_ptr = out_buf;
 
-	int res = decompress(inp_buf, (inp_ptr - inp_buf), out_buf, &out_ptr, max_out_size, block_size);
+	res = decompress(inp_buf, payload_size, out_buf, &out_ptr, max_out_size, block_size);
 	if (res != 1){
 		perror("Could not decompress BMP file.\n");
 		goto cleanup;
@@ -100,6 +105,7 @@ void compress_bmp(const char* input_path, const char* output_path){
 	FILE* outfile = NULL;
 	uint8_t *inp_buf = NULL;
 	uint8_t *out_buf = NULL;
+	int res = 0;
 
 	infile = fopen(input_path, "rb");
 	if (!infile){
@@ -108,7 +114,7 @@ void compress_bmp(const char* input_path, const char* output_path){
 	}	
 
 	BMP_meta meta;
-	int res = read_meta(infile, &meta);
+	res = read_meta(infile, &meta);
 	if (res == 0){
 		perror("Could not read file meta.\n");
 		goto cleanup;
@@ -120,6 +126,7 @@ void compress_bmp(const char* input_path, const char* output_path){
 	size_t pure_pixel_bytes = meta.height * unpadded_row_length;
 	size_t max_out_size = pure_pixel_bytes * 2;
 	uint16_t block_size = meta.BPP / 8;
+
 
 	inp_buf = malloc(pure_pixel_bytes);
 	if (inp_buf == NULL){
@@ -148,20 +155,27 @@ void compress_bmp(const char* input_path, const char* output_path){
 
 	uint8_t *out_ptr = out_buf;
 	res = compress(inp_buf, pure_pixel_bytes, out_buf, &out_ptr, max_out_size, block_size);
+
 	if (res != 1){
 		perror("Could not compress BMP file.\n");
 		goto cleanup;
 	}
 	
 	size_t compressed_size = out_ptr - out_buf;
-
 	outfile = fopen(output_path, "wb");
 	if (!outfile){
 		perror("Could not open file.\n");
 		goto cleanup;
 	}
 	
+	/*
 	if (!fwrite(&(meta.width), 4, 1, outfile) || !fwrite(&(meta.height), 4, 1, outfile) || !fwrite(&(meta.BPP), 2, 1, outfile)){
+		perror("Could not write to file.\n");
+		goto cleanup;
+	}
+	*/
+
+	if (!fwrite(&meta, sizeof(BMP_meta), 1, outfile)){
 		perror("Could not write to file.\n");
 		goto cleanup;
 	}
@@ -191,12 +205,14 @@ int read_meta(FILE* infile, BMP_meta *meta){
 		perror("Could not read file.\n");
 		return 0;
 	}
+
 	if (sig_buff[0] != 'B' || sig_buff[1] != 'M'){
 		perror("Invalid signature.\n");
 		return 0;
 	}
 	
-
+	/*
+	fseek(infile, 18, SEEK_SET);
 	if (fread(&(meta->width), 4, 1, infile) < 1){
 		perror("Could not read file.\n");
 		return 0;
@@ -212,6 +228,13 @@ int read_meta(FILE* infile, BMP_meta *meta){
 		perror("Could not read file.\n");
 		return 0;
 	}
-	
+	*/
+
+	fseek(infile, 0, SEEK_SET);
+	if (!fread(meta, sizeof(BMP_meta), 1, infile)){
+		perror("Could not parse BMP header.\n");
+		return 0;
+	}
+
 	return 1;
 }
