@@ -47,11 +47,11 @@ int main(int argc, char* argv[]){
 
 	if (compress){
 		if (format == 'B'){
-			decompress_bmp(input_path, output_path);
+			compress_bmp(input_path, output_path);
 		}
 	} else {
 		if (format == 'B'){
-			compress_bmp(input_path, output_path);
+			decompress_bmp(input_path, output_path);
 		}
 	}
 
