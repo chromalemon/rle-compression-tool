@@ -17,13 +17,6 @@ void decompress_bmp(const char* input_path, const char* output_path){
 	
 	BMP_meta meta;	
 
-	/*
-	if (!fread(&(meta.width), 4, 1, infile) || !fread(&(meta.height), 4, 1 , infile) || !fread(&(meta.BPP), 2, 1, infile)){
-		perror("Could not read file.\n");
-		goto cleanup;
-	}
-	*/
-
 	res = read_meta(infile, &meta);
 	if (res == 0){
 		perror("Could not read file meta.\n");
@@ -168,13 +161,6 @@ void compress_bmp(const char* input_path, const char* output_path){
 		goto cleanup;
 	}
 	
-	/*
-	if (!fwrite(&(meta.width), 4, 1, outfile) || !fwrite(&(meta.height), 4, 1, outfile) || !fwrite(&(meta.BPP), 2, 1, outfile)){
-		perror("Could not write to file.\n");
-		goto cleanup;
-	}
-	*/
-
 	if (!fwrite(&meta, sizeof(BMP_meta), 1, outfile)){
 		perror("Could not write to file.\n");
 		goto cleanup;
@@ -211,25 +197,6 @@ int read_meta(FILE* infile, BMP_meta *meta){
 		return 0;
 	}
 	
-	/*
-	fseek(infile, 18, SEEK_SET);
-	if (fread(&(meta->width), 4, 1, infile) < 1){
-		perror("Could not read file.\n");
-		return 0;
-	}
-
-	if (fread(&(meta->height), 4, 1, infile) < 1){
-		perror("Could not read file.\n");
-		return 0;
-	}
-
-	fseek(infile, 28, SEEK_SET);
-	if (fread(&(meta->BPP), 2, 1, infile) < 1){
-		perror("Could not read file.\n");
-		return 0;
-	}
-	*/
-
 	fseek(infile, 0, SEEK_SET);
 	if (!fread(meta, sizeof(BMP_meta), 1, infile)){
 		perror("Could not parse BMP header.\n");

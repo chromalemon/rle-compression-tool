@@ -38,4 +38,4 @@ Run the program:
 
 I wrote this program so I could explore file handling, streams, padding, buffers, strict formatting, error handling, memory management, and other principles/concepts.
 
-Originally, I only had pure RLE in mind for standard text files. I stored counts as unsigned chars, and the data to compress was always simply 8 bits per block. This was a bit boring so I looked into BMP files and how they are formatted. I realised that rather than having my program focus specifically on files, I should try to make a universal RLE tool. It should be compatible with any input stream: files, network packets, sensor data, live video, and more.
+Originally, I had pure RLE in mind for standard text files. I stored counts as unsigned chars, and the data to compress was always 8 bits per block. This was a bit boring so I looked into BMP files and how they are formatted. I realised that instead of focusing specifically on files, I should make a universal RLE tool. It should be compatible with any input stream: files, network packets, sensor data, live video, and more.

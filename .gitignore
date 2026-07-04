@@ -1,6 +1,7 @@
 # Test and program files
 *.bmp
 *.rle
+*.swp
 rle_tool
 
 # Prerequisites

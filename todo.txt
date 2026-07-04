@@ -1,0 +1,4 @@
+Todo:
+	- change BMP_meta definition so that all BMP versions fit.
+	- add -s command to suppress file size message.
+	- add error messages to main.c for invalid input.
