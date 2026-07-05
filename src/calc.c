@@ -34,5 +34,5 @@ void print_diff(const char* input_path, const char* output_path){
 
 	printf("\nOriginal: %ld", original);
 	printf("\nNew: %ld", new);
-	printf("\nCompression ratio: %.2f%\n", ratio);
+	printf("\nCompression ratio: %.2f%%\n", ratio);
 }
