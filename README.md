@@ -20,11 +20,11 @@ Compression ratio: 7.54%
 Clone the repository:
 
 ```bash
-git clone https://github.com/chromalemon/Custom-RLE-Compression-Suite RLE_Suite
-cd RLE_Suite
+git clone https://github.com/chromalemon/rle-compression-tool
+cd rle-compression-tool
 ```
 
-Compile the files:
+Compile the required files:
 
 ```bash
 make
