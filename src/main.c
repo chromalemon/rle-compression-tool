@@ -9,7 +9,7 @@
 
 int main(int argc, char* argv[]){
 	int opt;
-	int res;
+	int res = 0;
 	int compress = 0;
 	int decompress = 0;
 	char format = 0;
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	
-	if (!res){
+	if (res != 1){
 		exit(EXIT_FAILURE);
 	}
 
