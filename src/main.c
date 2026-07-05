@@ -9,6 +9,7 @@
 
 int main(int argc, char* argv[]){
 	int opt;
+	int res;
 	int compress = 0;
 	int decompress = 0;
 	char format = 0;
@@ -56,12 +57,16 @@ int main(int argc, char* argv[]){
 
 	if (compress){
 		if (format == 'B'){
-			compress_bmp(input_path, output_path);
+			res = compress_bmp(input_path, output_path);
 		}
 	} else {
 		if (format == 'B'){
-			decompress_bmp(input_path, output_path);
+			res = decompress_bmp(input_path, output_path);
 		}
+	}
+	
+	if (!res){
+		exit(EXIT_FAILURE);
 	}
 
 	if (!silence && is_file){
