@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
 	int silence = 0;
 	int is_file = 0;
 	
-	while ((opt = getopt(argc, argv, "cdb")) != -1){
+	while ((opt = getopt(argc, argv, "cdbs")) != -1){
 		switch (opt){
 			case 'c':
 				compress = 1;
