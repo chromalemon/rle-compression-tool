@@ -47,6 +47,24 @@ Run the program:
 
 - ./rle_tool -c -b input.bmp output.bmp
 
+## Creating BMP Files
+
+To create your own BMP files for testing, use ImageMagick. Head to their website for installation and usage. 
+
+**Example BMP File Creation:**
+
+With ImageMagick installed, use this command to make an M by N BMP V3 image, with a full canvas of color C, stored in sample.bmp:
+
+```bash
+magick -size MxN xc:C BMP3:sample.bmp
+```
+
+To create a 16x16 solid blue image:
+
+```bash
+magick -size 16x16 xc:blue BMP3:sample.bmp
+```
+
 # Backstory
 
 I wrote this program so I could explore file handling, streams, padding, buffers, strict formatting, error handling, memory management, and other principles/concepts.
