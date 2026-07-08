@@ -1,8 +1,6 @@
 #include "file.h"
 
 int file_init(file_struct *file, const char* input_path, const char* output_path){
-	int res = 0;
-
 	FILE *infile = fopen(input_path, "rb");
 	if (!infile){
 		fprintf(stderr, "Error: Could not open input file.\n");
@@ -15,8 +13,8 @@ int file_init(file_struct *file, const char* input_path, const char* output_path
 		goto cleanup;
 	}
 
-	file_struct->infile = infile;
-	file_struct->outfile = outfile;
+	file->infile = infile;
+	file->outfile = outfile;
 
 	return 1;
 
@@ -26,34 +24,44 @@ cleanup:
 	return 0;
 }
 
-int mem_init(mem_struct *mem, const char* input_path, const char* output_path, const uin8_t block_size){
+int mem_init(mem_struct *mem, const char* input_path, const uint8_t block_size, const size_t in_size, const size_t out_size){
 	uint8_t *inp_buf = NULL;
 	uint8_t *out_buf = NULL;
-	int res = 0;
-
-	long max_in_size = calc_file_size(input_path);
-	if (max_in_size == -1L) goto cleanup;
 	
+	size_t max_in_size;
+	if (in_size != 0){
+		max_in_size = in_size;
+	} else {
+		long res = calc_file_size(input_path);
+		if (res == -1L) goto cleanup;
+		max_in_size = (size_t)res;
+	}
+
 	inp_buf = malloc(max_in_size);
 	if (inp_buf == NULL){
 		fprintf(stderr, "Error: Could not allocate memory for input buffer.\n");
 		goto cleanup;
 	}
 
-	size_t max_out_size = max_in_size * 2;
-	
+	size_t max_out_size;
+	if (out_size != 0){
+		max_out_size = out_size;
+	} else {
+		max_out_size = max_in_size * 2;
+	}
+
 	out_buf = malloc(max_out_size);
 	if (out_buf == NULL){
 		fprintf(stderr, "Error: Could not allocate memory for output buffer.\n");
 		goto cleanup;
 	}
 
-	mem_struct->inp_buf = inp_buf;
-	mem_struct->max_in_size = (size_t)max_in_size;
-	mem_struct->out_buf = out_buf;
-	mem_struct->out_ptr = out_buf;
-	mem_struct->max_out_size = max_out_size;
-	mem_struct->block_size = block_size;
+	mem->inp_buf = inp_buf;
+	mem->max_in_size = (size_t)max_in_size;
+	mem->out_buf = out_buf;
+	mem->out_ptr = out_buf;
+	mem->max_out_size = max_out_size;
+	mem->block_size = block_size;
 
 	return 1;
 

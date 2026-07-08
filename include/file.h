@@ -20,7 +20,7 @@ typedef struct {
 } mem_struct;
 
 int file_init(file_struct *file, const char* input_path, const char* output_path);
-int mem_init(mem_struct *mem, const char* input_path, const char* output_path, const uint8_t block_size);
+int mem_init(mem_struct *mem, const char* input_path, const uint8_t block_size, const size_t in_size, const size_t out_size);
 long calc_file_size(const char* path);
 void print_diff(const char* input_path, const char* output_path);
 

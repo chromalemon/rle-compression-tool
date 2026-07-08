@@ -149,7 +149,7 @@ int compress_regular(const char* input_path, const char* output_path, const uint
 	if (res != 1) goto cleanup; 
 
 	mem_struct mem;
-	res = mem_init(&mem, input_path, output_path, block_size);
+	res = mem_init(&mem, input_path, block_size, 0, 0);
 	if (res != 1) goto cleanup;
 
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
@@ -161,7 +161,7 @@ int compress_regular(const char* input_path, const char* output_path, const uint
 	res = compress(&mem);
 	if (res != 1) goto cleanup;
 
-	if (!fwrite("RLE!", 4, 1, mem.outfile) || !fwrite(&(mem.block_size), 1, 1, file.outfile) || !fwrite(&(mem.max_in_size), sizeof(size_t), 1 file.outfile)){
+	if (!fwrite("RLE!", 4, 1, file.outfile) || !fwrite(&(mem.block_size), 1, 1, file.outfile) || !fwrite(&(mem.max_in_size), sizeof(size_t), 1, file.outfile)){
 		fprintf(stderr, "Error: Could not write metadata to output file.\n");
 		res = 0;
 		goto cleanup;
@@ -187,7 +187,7 @@ cleanup:
 
 int decompress_regular(const char *input_path, const char* output_path){
 	int res = 0;
-	size_t max_out_size;
+	size_t old_size;
 	uint8_t block_size;
 	uint8_t sig_buf[4];
 
@@ -206,18 +206,16 @@ int decompress_regular(const char *input_path, const char* output_path){
 		goto cleanup;
 	}
 
-	if (!fread(&block_size, 1, 1, file.infile) !! !fread(&max_out_size, sizeof(size_t), 1, file.infile)){
+	if (!fread(&block_size, 1, 1, file.infile) || !fread(&old_size, sizeof(size_t), 1, file.infile)){
 		fprintf(stderr, "Error: Could not read metadata from input file.\n");
 		res = 0;
 		goto cleanup;
 	}
 
 	mem_struct mem;
-	res = mem_init(&mem, input_path, output_path, block_size);
+	res = mem_init(&mem, input_path, block_size, 0, old_size);
 	if (res != 1) goto cleanup;
 	
-	mem.max_out_size = max_out_size;
-
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
 		fprintf(stderr, "Error: Could not read file into input buffer.\n");
 		res = 0;

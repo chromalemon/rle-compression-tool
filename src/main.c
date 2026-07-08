@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include "bmp.h"
 #include "rle.h"
-#include "calc.h"
+#include "file.h"
 
 int main(int argc, char* argv[]){
 	int opt;
@@ -78,7 +78,7 @@ int main(int argc, char* argv[]){
 		if (format == 'B'){
 			res = decompress_bmp(input_path, output_path);
 		} else if (format == 'R'){
-			res = 1;
+			res = decompress_regular(input_path, output_path);
 		}
 	}
 	
