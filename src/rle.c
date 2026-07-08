@@ -154,15 +154,23 @@ int compress_regular(const char* input_path, const char* output_path, const uint
 
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
 		fprintf(stderr, "Error: Could not read file into input buffer.\n");
+		res = 0;
 		goto cleanup;
 	}
 
 	res = compress(&mem);
 	if (res != 1) goto cleanup;
 
+	if (!fwrite("RLE!", 4, 1, mem.outfile) || !fwrite(&(mem.block_size), 1, 1, file.outfile) || !fwrite(&(mem.max_in_size), sizeof(size_t), 1 file.outfile)){
+		fprintf(stderr, "Error: Could not write metadata to output file.\n");
+		res = 0;
+		goto cleanup;
+	}
+	
 	size_t new_size = mem.out_ptr - mem.out_buf;
 	if (!fwrite(mem.out_buf, new_size, 1, file.outfile)){
 		fprintf(stderr, "Error: Could not write payload to file.\n");
+		res = 0;
 		goto cleanup;
 	}
 	
@@ -177,17 +185,63 @@ cleanup:
 	return res;
 }
 
-int decompress_regular(const char *input_path, const char* output_path, const uint8_t block_size){
-	FILE *infile = NULL;
-	FILE *outfile = NULL;
-	uint8_t *inp_buf = NULL:
-	uint8_t *out_buf = NULL;
+int decompress_regular(const char *input_path, const char* output_path){
 	int res = 0;
+	size_t max_out_size;
+	uint8_t block_size;
+	uint8_t sig_buf[4];
 
-	infile = fopen(input_path, "rb");
+	file_struct file;
+	res = file_init(&file, input_path, output_path);
+	if (res != 1) goto cleanup;
 
-	if (!infile){
-		fprintf(stderr, "Error: Could not open input file.\n");
+	if (!fread(sig_buf, 4, 1, file.infile)){
+		fprintf(stderr, "Error: Could not read file signature.\n");
+		res = 0;
 		goto cleanup;
 	}
+	if (memcmp("RLE!", sig_buf, 4) != 0){
+		fprintf(stderr, "Error: Invalid file signature!\n");
+		res = 0;
+		goto cleanup;
+	}
+
+	if (!fread(&block_size, 1, 1, file.infile) !! !fread(&max_out_size, sizeof(size_t), 1, file.infile)){
+		fprintf(stderr, "Error: Could not read metadata from input file.\n");
+		res = 0;
+		goto cleanup;
+	}
+
+	mem_struct mem;
+	res = mem_init(&mem, input_path, output_path, block_size);
+	if (res != 1) goto cleanup;
+	
+	mem.max_out_size = max_out_size;
+
+	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
+		fprintf(stderr, "Error: Could not read file into input buffer.\n");
+		res = 0;
+		goto cleanup;
+	}
+
+	res = decompress(&mem);
+	if (res != 1) goto cleanup;
+
+	size_t new_size = mem.out_ptr - mem.out_buf;
+	if (!fwrite(mem.out_buf, new_size, 1, file.outfile)){
+		fprintf(stderr, "Error: Could not write payload to file.\n");
+		res = 0;
+		goto cleanup;
+	}
+	
+	res = 1;
+	goto cleanup;
+
+cleanup:
+	if (file.infile) fclose(file.infile);
+	if (file.outfile) fclose(file.outfile);
+	free(mem.inp_buf);
+	free(mem.out_buf);
+	return res;
+
 }

@@ -2,6 +2,7 @@
 #include "bmp.h"
 #include "calc.h"
 
+/*
 int decompress_bmp(const char* input_path, const char* output_path){
 	FILE* infile = NULL;
 	FILE* outfile = NULL;
@@ -89,6 +90,17 @@ cleanup:
 	free(out_buf);
 	return (res == 1);
 }
+*/
+
+int decompress_bmp(const char* input_path, const char* output_path){
+	int res = 0;
+
+	file_struct file;
+	res = file_init(&file, input_path, output_path);
+	if (res != 1) goto cleanup;
+
+	return 0;
+}
 
 int compress_bmp(const char* input_path, const char* output_path){
 	FILE* infile = NULL;
@@ -173,13 +185,13 @@ cleanup:
 int read_meta(FILE* infile, BMP_meta *meta){
 	if (!meta) return 0;
 
-	uint8_t sig_buff[2];
-	if (fread(&sig_buff, 1, 2, infile) < 2){
+	uint8_t sig_buf[2];
+	if (fread(&sig_buf, 1, 2, infile) < 2){
 		fprintf(stderr, "Error: Could not read file.\n");
 		return 0;
 	}
 
-	if (sig_buff[0] != 'B' || sig_buff[1] != 'M'){
+	if (memcmp("BM", sig_buf, 2) != 0){
 		fprintf(stderr, "Error: Invalid signature, file must be BMP V3.\n");
 		return 0;
 	}
