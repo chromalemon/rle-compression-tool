@@ -22,12 +22,11 @@ int decompress_bmp(const char* input_path, const char* output_path){
 		goto cleanup;
 	}
 
-
 	size_t unpadded_row_length = (meta.width * meta.BPP) / 8;
 	size_t total_padded_row_length = ((unpadded_row_length + 3) / 4) * 4;
 	uint8_t padding_bytes_to_skip = total_padded_row_length - unpadded_row_length;
 	size_t max_out_size = meta.height * unpadded_row_length;
-	uint16_t block_size = meta.BPP / 8;
+	uint8_t block_size = meta.BPP / 8;
 	uint8_t zero = 0;	
 
 	outfile = fopen(output_path, "wb");
@@ -51,7 +50,7 @@ int decompress_bmp(const char* input_path, const char* output_path){
 	}
 
 	if (fread(inp_buf, 1, payload_size, infile) < payload_size){
-		fprintf(stderr, "Error: Could not read input file for pixel payload.\n");
+		fprintf(stderr, "Error: Could not read input file for payload.\n");
 		goto cleanup;
 	}	
 
@@ -64,19 +63,17 @@ int decompress_bmp(const char* input_path, const char* output_path){
 	uint8_t *out_ptr = out_buf;
 
 	res = decompress(inp_buf, payload_size, out_buf, &out_ptr, max_out_size, block_size);
-	if (res != 1){
-		goto cleanup;
-	}	
+	if (res != 1) goto cleanup;
 
 	out_ptr = out_buf;
 	for (uint8_t i = 0; i < meta.height; i++){
 		if (fwrite(out_ptr, 1, unpadded_row_length, outfile) < unpadded_row_length){
-			fprintf(stderr, "Error: Could not write pixel payload to file.\n");
+			fprintf(stderr, "Error: Could not write payload to file.\n");
 			goto cleanup;
 		}
 		out_ptr += unpadded_row_length;
 		if (fwrite(&zero, 1, padding_bytes_to_skip, outfile) < padding_bytes_to_skip){
-			fprintf(stderr, "Error: Could not write pixel payload to file.\n");
+			fprintf(stderr, "Error: Could not write payload to file.\n");
 			goto cleanup;
 		}
 		out_ptr += padding_bytes_to_skip;
@@ -108,17 +105,14 @@ int compress_bmp(const char* input_path, const char* output_path){
 
 	BMP_meta meta;
 	res = read_meta(infile, &meta);
-	if (res != 1){
-		goto cleanup;
-	}
-
+	if (res != 1) goto cleanup;
+	
 	size_t unpadded_row_length = (meta.width * meta.BPP ) / 8;
 	size_t total_padded_row_length = ((unpadded_row_length + 3) / 4) * 4;
 	uint8_t padding_bytes_to_skip = total_padded_row_length - unpadded_row_length;
 	size_t pure_pixel_bytes = meta.height * unpadded_row_length;
 	size_t max_out_size = pure_pixel_bytes * 2;
-	uint16_t block_size = meta.BPP / 8;
-
+	uint8_t block_size = meta.BPP / 8;
 
 	inp_buf = malloc(pure_pixel_bytes);
 	if (inp_buf == NULL){
@@ -146,11 +140,8 @@ int compress_bmp(const char* input_path, const char* output_path){
 	uint8_t *out_ptr = out_buf;
 	res = compress(inp_buf, pure_pixel_bytes, out_buf, &out_ptr, max_out_size, block_size);
 
-	if (res != 1){
-		goto cleanup;
-	}
+	if (res != 1) goto cleanup;
 	
-	size_t compressed_size = out_ptr - out_buf;
 	outfile = fopen(output_path, "wb");
 	if (!outfile){
 		fprintf(stderr, "Error: Could not open output file.\n");
@@ -162,8 +153,9 @@ int compress_bmp(const char* input_path, const char* output_path){
 		goto cleanup;
 	}
 
+	size_t compressed_size = out_ptr - out_buf;
 	if (fwrite(out_buf, 1, compressed_size, outfile) != compressed_size){
-		fprintf(stderr, "Error: Could not write pixel payload to file.\n");
+		fprintf(stderr, "Error: Could not write payload to file.\n");
 		goto cleanup;
 	}
 

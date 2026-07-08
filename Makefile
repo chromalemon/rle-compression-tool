@@ -8,7 +8,7 @@ else
 endif
 
 TARGET = rle_tool
-SRCS = src/calc.c src/bmp.c src/rle.c src/main.c
+SRCS = src/file.c src/bmp.c src/rle.c src/main.c
 OBJS = $(SRCS:.c=.o)
 
 .PHONY: all clean
