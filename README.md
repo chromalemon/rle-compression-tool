@@ -38,14 +38,21 @@ Run the program:
 
 **Options:**
 
-- -c = compress
-- -d = decompress
-- -s = suppress size info (no "Original size: New size:" message)
+- -c = Compress
+- -d = Decompress
+- -s = Suppress/silence size info (no "Original size: New size:" message)
 - -b = BMP file format
+- -r = Regular binary file format
 
 **Example Usage:**
 
+```bash
+# Compress BMP file.
 - ./rle_tool -c -b input.bmp output.bmp
+
+# Compress regular file with word size of 3 bytes, silenced.
+- ./rle_tool -c -r3 -s input.txt output.rle
+```
 
 ## Creating BMP Files
 
