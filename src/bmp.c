@@ -9,6 +9,12 @@ int compress_bmp(const char* input_path, const char* output_path){
 
 	res = read_meta(input_path, &meta);
 	if (res != 1) return 0;
+
+	if (meta.compression != 0){
+		fprintf(stderr, "Error: BMP file already compressed.\n");
+		res = 0;
+		goto cleanup;
+	}
 	
 	size_t unpadded_row_length = (meta.width * meta.BPP ) / 8;
 	size_t total_padded_row_length = ((unpadded_row_length + 3) / 4) * 4;
@@ -18,9 +24,12 @@ int compress_bmp(const char* input_path, const char* output_path){
 	file_struct file;
 	mem_struct mem;
 
-	res = file_mem_init(&file, &mem, input_path, output_path, block_size, meta.offset, 0);
+	res = file_init(&file, input_path, output_path);
 	if (res != 1) return 0;
 
+	res = mem_init(&mem, input_path, block_size, meta.offset, 1, 0);
+	if (res != 1) return 0;
+	
 	uint8_t *inp_ptr = mem.inp_buf;
 	fseek(file.infile, meta.offset, SEEK_SET);
 	for (uint32_t i = 0; i < meta.height; i++){
@@ -35,15 +44,25 @@ int compress_bmp(const char* input_path, const char* output_path){
 
 	res = compress(&mem);
 	if (res != 1) goto cleanup;
-	
+
+	size_t new_size = mem.out_ptr - mem.out_buf;
+	if (new_size + 54 > UINT32_MAX){
+		fprintf(stderr, "Error: Compressed file too large for BMP3.\n");
+		res = 0;
+		goto cleanup;
+	}
+
+	uint32_t file_size = (uint32_t)(new_size + sizeof(BMP_meta));
+	meta.file_size = file_size;
+	meta.compression = 1;
+
 	if (!fwrite(&meta, sizeof(BMP_meta), 1, file.outfile)){
 		fprintf(stderr, "Error: Could not write BMP metadata to file.\n");
 		res = 0;
 		goto cleanup;
 	}
 
-	size_t new_size = mem.out_ptr - mem.out_buf;
-	if (!fwrite(mem.out_buf, new_size, 1, file.outfile)){
+		if (!fwrite(mem.out_buf, new_size, 1, file.outfile)){
 		fprintf(stderr, "Error: Could not write payload to file.\n");
 		res = 0;
 		goto cleanup;
@@ -69,27 +88,28 @@ int decompress_bmp(const char* input_path, const char* output_path){
 	res = read_meta(input_path, &meta);
 	if (res != 1) return 0;
 
+	if (meta.compression == 0){
+		fprintf(stderr, "Error: BMP file is not compressed.\n");
+		res = 0;
+		goto cleanup;
+	}
+
 	size_t unpadded_row_length = (meta.width * meta.BPP) / 8;
 	size_t total_padded_row_length = ((unpadded_row_length + 3) / 4) * 4;
 	uint8_t padding_bytes_to_skip = total_padded_row_length - unpadded_row_length;
+	size_t old_size = total_padded_row_length * meta.height;
 	uint8_t block_size = meta.BPP / 8;
 	uint8_t zero = 0;	
 
 	file_struct file;
 	mem_struct mem;
 
-	res = file_mem_init(&file, &mem, input_path, output_path, block_size, meta.offset, 0);
+	res = file_init(&file, input_path, output_path);
 	if (res != 1) return 0;
 
-	mem.max_out_size = meta.file_size - meta.offset;
-	free(mem.out_buf);
-	mem.out_buf = malloc(mem.max_out_size);
-	if (mem.out_buf == NULL){
-		fprintf(stderr, "Error: Could not allocate memory for output buffer.\n");
-		res = 0;
-		goto cleanup;
-	}
-	
+	res = mem_init(&mem, input_path, block_size, meta.offset, 0, old_size);
+	if (res != 1) return 0;
+
 	fseek(file.infile, meta.offset, SEEK_SET);
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
 		fprintf(stderr, "Error: Could not read file into input buffer.\n");
@@ -99,6 +119,11 @@ int decompress_bmp(const char* input_path, const char* output_path){
 
 	res = decompress(&mem);
 	if (res != 1) goto cleanup;
+
+	size_t new_size = mem.out_ptr - mem.out_buf;
+	uint32_t file_size = (uint32_t)(new_size + sizeof(BMP_meta));
+	meta.file_size = file_size;
+	meta.compression = 0;
 
 	if (!fwrite(&meta, sizeof(BMP_meta), 1, file.outfile)){
 		fprintf(stderr, "Error: Could not write BMP metadata to file.\n");

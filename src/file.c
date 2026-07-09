@@ -1,10 +1,8 @@
 #include "file.h"
 
-int file_mem_init(file_struct *file, mem_struct *mem, const char* input_path, const char* output_path, const uint8_t block_size, const size_t pixel_offset, const size_t size_offset){
+int file_init(file_struct *file, const char* input_path, const char* output_path){
 	FILE *infile = NULL;
 	FILE *outfile = NULL;
-	uint8_t *inp_buf = NULL;
-	uint8_t *out_buf = NULL;
 
 	infile = fopen(input_path, "rb");
 	if (!infile){
@@ -20,12 +18,22 @@ int file_mem_init(file_struct *file, mem_struct *mem, const char* input_path, co
 
 	file->infile = infile;
 	file->outfile = outfile;
+
+	return 1;
+
+cleanup:
+	if (infile) fclose(infile);
+	if (outfile) fclose(outfile);
+	return 0;
+}
+
+int mem_init(mem_struct *mem, const char* input_path, const uint8_t block_size, const size_t pixel_offset, const uint8_t compress_bool, const size_t old_size){
+	uint8_t *inp_buf = NULL;
+	uint8_t *out_buf = NULL;
 	
 	long res = calc_file_size(input_path);
-	if (res == -1L){
-		goto cleanup;
-	}
-	
+	if (res == -1L) goto cleanup;
+
 	size_t max_in_size = (size_t)(res - pixel_offset);
 
 	inp_buf = malloc(max_in_size);
@@ -34,16 +42,9 @@ int file_mem_init(file_struct *file, mem_struct *mem, const char* input_path, co
 		goto cleanup;
 	}
 
-	size_t max_out_size;
-	if (size_offset == 0){
+	size_t max_out_size = old_size;
+	if (compress_bool != 0){
 		max_out_size = max_in_size * 2;
-	} else {
-		fseek(file->infile, (long)size_offset, SEEK_SET);
-		if (!fread(&max_out_size, sizeof(size_t), 1, file->infile)){
-			fprintf(stderr, "Error: Could not read input file metadata.\n");
-			goto cleanup;
-		}
-		fseek(file->infile, 0, SEEK_SET);
 	}
 
 	out_buf = malloc(max_out_size);
@@ -62,8 +63,6 @@ int file_mem_init(file_struct *file, mem_struct *mem, const char* input_path, co
 	return 1;
 
 cleanup:
-	if (infile) fclose(infile);
-	if (outfile) fclose(outfile);
 	free(inp_buf);
 	free(out_buf);
 	return 0;

@@ -85,7 +85,10 @@ int compress_regular(const char* input_path, const char* output_path, const uint
 	file_struct file;
 	mem_struct mem;
 
-	res = file_mem_init(&file, &mem, input_path, output_path, block_size, 0, 0);
+	res = file_init(&file, input_path, output_path);
+	if (res != 1) return 0;
+
+	res = mem_init(&mem, input_path, block_size, 0, 1, 0);
 	if (res != 1) return 0;
 
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
@@ -100,8 +103,7 @@ int compress_regular(const char* input_path, const char* output_path, const uint
 	reg_meta meta;
 	memcpy(&meta.signature, "RLE!", 4);
 	meta.block_size = block_size;
-	meta.file_size = mem.max_in_size;
-
+	meta.old_size = mem.max_in_size; 
 	if (!fwrite(&meta, sizeof(reg_meta), 1, file.outfile)){
 		fprintf(stderr, "Error: Could not write metadata to output file.\n");
 		res = 0;
@@ -132,8 +134,7 @@ int decompress_regular(const char *input_path, const char* output_path){
 	file_struct file;
 	mem_struct mem;
 
-	size_t pixel_offset = 5 + sizeof(size_t);
-	res = file_mem_init(&file, &mem, input_path, output_path, 1, pixel_offset, 5);
+	res = file_init(&file, input_path, output_path);
 	if (res != 1) return 0;
 
 	reg_meta meta;
@@ -145,10 +146,17 @@ int decompress_regular(const char *input_path, const char* output_path){
 	}
 
 	if (memcmp("RLE!", &meta.signature, 4) != 0){
-		fprintf(stderr, "Error: Invalid file signature!\n");
+		fprintf(stderr, "Error: Input file has not been compressed with this tool.\n");
 		res = 0;
 		goto cleanup;
 	}
+
+	size_t offset = sizeof(reg_meta);
+
+	size_t padded_size = ((meta.old_size + meta.block_size - 1) / meta.block_size) * meta.block_size;
+
+	res = mem_init(&mem, input_path, meta.block_size, offset, 0, padded_size);
+	if (res != 1) return 0;
 
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
 		fprintf(stderr, "Error: Could not read file into input buffer.\n");
@@ -159,8 +167,7 @@ int decompress_regular(const char *input_path, const char* output_path){
 	res = decompress(&mem);
 	if (res != 1) goto cleanup;
 
-	size_t new_size = mem.out_ptr - mem.out_buf;
-	if (!fwrite(mem.out_buf, new_size, 1, file.outfile)){
+	if (!fwrite(mem.out_buf, meta.old_size, 1, file.outfile)){
 		fprintf(stderr, "Error: Could not write payload to file.\n");
 		res = 0;
 		goto cleanup;

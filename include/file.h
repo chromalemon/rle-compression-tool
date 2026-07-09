@@ -9,7 +9,7 @@
 typedef struct {
 	uint32_t signature;
 	uint8_t block_size;
-	size_t file_size;
+	size_t old_size;
 } reg_meta;
 #pragma pack(pop)
 
@@ -27,9 +27,11 @@ typedef struct {
 	uint8_t block_size;
 } mem_struct;
 
-int file_mem_init(file_struct *file, mem_struct *mem, const char* input_path, const char* output_path, const uint8_t block_size, const size_t pixel_offset, const size_t size_offset);
 long calc_file_size(const char* path);
 void print_diff(const char* input_path, const char* output_path);
 
+int file_init(file_struct *file, const char* input_path, const char* output_path);
+
+int mem_init(mem_struct *mem, const char* input_path, const uint8_t block_size, const size_t pixel_offset, const uint8_t compress_bool, const size_t old_size);
 
 #endif
