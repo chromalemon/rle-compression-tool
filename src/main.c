@@ -16,9 +16,14 @@ int main(int argc, char* argv[]){
 	int silence = 0;
 	int is_file = 0;
 	int block_size = 1;
-	
-	while ((opt = getopt(argc, argv, ":cdbsr::")) != -1){
+	int fail = 0;
+	int dupe = 0;
+
+	while ((opt = getopt(argc, argv, ":cdbhsr::")) != -1){
 		switch (opt){
+			case '?':
+				fail = 1;
+				break;
 			case 'c':
 				compress = 1;
 				break;
@@ -26,10 +31,12 @@ int main(int argc, char* argv[]){
 				decompress = 1;
 				break;
 			case 'b':
+				if (format) dupe = 1;
 				format = 'B';
 				is_file = 1;
 				break;
 			case 'r':
+				if (format) dupe = 1;
 				format = 'R';
 				is_file = 1;
 				if (optarg != 0){
@@ -38,24 +45,35 @@ int main(int argc, char* argv[]){
 						fprintf(stderr, "Error: Invalid word size.\n");
 						exit(EXIT_FAILURE);
 					}
-					block_size = (int)temp;
+					block_size = (uint8_t)temp;
 				}
 				break;
 			case 's':
 				silence = 1;
 				break;
+			case 'h':
+				break;
 			default:
 				break;
 		}
 	}
+	if (dupe){
+		fprintf(stderr, "Error: Expected one file format, received multiple.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (fail){
+		fprintf(stderr, "Error: Unknown argument.\n");
+		exit(EXIT_FAILURE);
+	}
 
 	if (compress == decompress){
-		fprintf(stderr, "Error: Expected one of -c and -d, received neither or both.\n");
+		fprintf(stderr, "Error: Expected one of -c and -d, received multiple.\n");
 		exit(EXIT_FAILURE);
 	}
 
 	if (format == 0){
-		fprintf(stderr, "Error: Expected input/output format, e.g., -b for BMP, -r for regular binary.\n");
+		fprintf(stderr, "Error: Expected one input/output format, received none.\n");
 		exit(EXIT_FAILURE);
 	}
 

@@ -5,6 +5,14 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#pragma pack(push, 1)
+typedef struct {
+	uint32_t signature;
+	uint8_t block_size;
+	size_t file_size;
+} reg_meta;
+#pragma pack(pop)
+
 typedef struct {
 	FILE *infile;
 	FILE *outfile;
@@ -19,8 +27,7 @@ typedef struct {
 	uint8_t block_size;
 } mem_struct;
 
-int file_init(file_struct *file, const char* input_path, const char* output_path);
-int mem_init(mem_struct *mem, const char* input_path, const uint8_t block_size, const size_t in_size, const size_t out_size);
+int file_mem_init(file_struct *file, mem_struct *mem, const char* input_path, const char* output_path, const uint8_t block_size, const size_t pixel_offset, const size_t size_offset);
 long calc_file_size(const char* path);
 void print_diff(const char* input_path, const char* output_path);
 

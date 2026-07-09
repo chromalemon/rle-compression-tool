@@ -12,16 +12,14 @@ int compress(mem_struct *mem){
 			count += 1;
 			if (count == 255){
 				if (write_to_buf(mem, count, prev_block) != 1){
-					fprintf(stderr, "Error: Could not write to output buffer.\n");
-					return 0;
+					goto err;
 				}
 				count = 0;		
 			}
 		} else {
 			if (count > 0){
 				if (write_to_buf(mem, count, prev_block) != 1){
-					fprintf(stderr, "Error: Could not write to output buffer.\n");
-					return 0;
+					goto err;
 				}
 			}
 			prev_block = curr_block;
@@ -30,12 +28,15 @@ int compress(mem_struct *mem){
 		curr_block += mem->block_size;
 	}
 	if (count > 0 && !write_to_buf(mem, count, prev_block)){
-		fprintf(stderr, "Error: Could not write to output buffer.\n");
-		return 0;
+		goto err;
 	}
 
 	printf("Compression complete.\n");
 	return 1;
+
+err:
+	fprintf(stderr, "Error: Could not write to output buffer.\n");
+	return 0;
 }
 
 int write_to_buf(mem_struct *mem, const uint8_t count, const uint8_t *prev_block){
@@ -77,80 +78,15 @@ int decompress(mem_struct *mem){
 	return 1;
 	
 }
-/*
-int compress_regular(const char *input_path, const char* output_path, const uint8_t block_size){
-	FILE *infile = NULL;
-	FILE *outfile = NULL;
-	uint8_t *inp_buf = NULL;
-	uint8_t *out_buf = NULL;
-	int res = 0;
-
-	infile = fopen(input_path, "rb");
-	
-	if (!infile){
-		fprintf(stderr, "Error: Could not open input file.\n");
-		goto cleanup;
-	}
-
-	long curr_size = calc_file_size(input_path);
-	inp_buf = malloc(curr_size);
-
-	if (inp_buf == NULL){
-		fprintf(stderr, "Error: Could not allocate memory for input buffer.\n");
-		goto cleanup;
-	}
-
-	if (!fread(inp_buf, curr_size, 1, infile)){
-		fprintf(stderr, "Error: Could not read file into input buffer.\n");
-		goto cleanup;
-	}
-
-	size_t max_out_size = curr_size * 2;
-	out_buf = malloc(max_out_size);
-
-	if (out_buf == NULL){
-		fprintf(stderr, "Error: Could not open output file.\n");
-		goto cleanup;
-	}
-	
-	uint8_t *out_ptr = out_buf;
-	res = compress(inp_buf, curr_size, out_buf, &out_ptr, max_out_size, block_size);
-	if (res != 1) goto cleanup;
-
-	outfile = fopen(output_path, "wb");
-	if (!outfile){
-		fprintf(stderr, "Error: Could not open output file.\n");
-		goto cleanup;
-	}
-	
-	size_t compressed_size = out_ptr - out_buf;
-	if (fwrite(out_buf, 1, compressed_size, outfile) != compressed_size){
-		fprintf(stderr, "Error: Could not write payload to file.\n");
-		goto cleanup;
-	}
-
-	res = 1;
-	goto cleanup;
-
-cleanup:
-	if (infile) fclose(infile);
-	if (outfile) fclose(outfile);
-	free(inp_buf);
-	free(out_buf);
-	return res;
-}
-*/
 
 int compress_regular(const char* input_path, const char* output_path, const uint8_t block_size){
 	int res = 0;
-	
-	file_struct file;
-	res = file_init(&file, input_path, output_path);
-	if (res != 1) goto cleanup; 
 
+	file_struct file;
 	mem_struct mem;
-	res = mem_init(&mem, input_path, block_size, 0, 0);
-	if (res != 1) goto cleanup;
+
+	res = file_mem_init(&file, &mem, input_path, output_path, block_size, 0, 0);
+	if (res != 1) return 0;
 
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
 		fprintf(stderr, "Error: Could not read file into input buffer.\n");
@@ -161,12 +97,17 @@ int compress_regular(const char* input_path, const char* output_path, const uint
 	res = compress(&mem);
 	if (res != 1) goto cleanup;
 
-	if (!fwrite("RLE!", 4, 1, file.outfile) || !fwrite(&(mem.block_size), 1, 1, file.outfile) || !fwrite(&(mem.max_in_size), sizeof(size_t), 1, file.outfile)){
+	reg_meta meta;
+	memcpy(&meta.signature, "RLE!", 4);
+	meta.block_size = block_size;
+	meta.file_size = mem.max_in_size;
+
+	if (!fwrite(&meta, sizeof(reg_meta), 1, file.outfile)){
 		fprintf(stderr, "Error: Could not write metadata to output file.\n");
 		res = 0;
 		goto cleanup;
 	}
-	
+
 	size_t new_size = mem.out_ptr - mem.out_buf;
 	if (!fwrite(mem.out_buf, new_size, 1, file.outfile)){
 		fprintf(stderr, "Error: Could not write payload to file.\n");
@@ -187,35 +128,28 @@ cleanup:
 
 int decompress_regular(const char *input_path, const char* output_path){
 	int res = 0;
-	size_t old_size;
-	uint8_t block_size;
-	uint8_t sig_buf[4];
 
 	file_struct file;
-	res = file_init(&file, input_path, output_path);
-	if (res != 1) goto cleanup;
+	mem_struct mem;
 
-	if (!fread(sig_buf, 4, 1, file.infile)){
-		fprintf(stderr, "Error: Could not read file signature.\n");
-		res = 0;
-		goto cleanup;
-	}
-	if (memcmp("RLE!", sig_buf, 4) != 0){
-		fprintf(stderr, "Error: Invalid file signature!\n");
-		res = 0;
-		goto cleanup;
-	}
+	size_t pixel_offset = 5 + sizeof(size_t);
+	res = file_mem_init(&file, &mem, input_path, output_path, 1, pixel_offset, 5);
+	if (res != 1) return 0;
 
-	if (!fread(&block_size, 1, 1, file.infile) || !fread(&old_size, sizeof(size_t), 1, file.infile)){
+	reg_meta meta;
+
+	if (!fread(&meta, sizeof(reg_meta), 1, file.infile)){
 		fprintf(stderr, "Error: Could not read metadata from input file.\n");
 		res = 0;
 		goto cleanup;
 	}
 
-	mem_struct mem;
-	res = mem_init(&mem, input_path, block_size, 0, old_size);
-	if (res != 1) goto cleanup;
-	
+	if (memcmp("RLE!", &meta.signature, 4) != 0){
+		fprintf(stderr, "Error: Invalid file signature!\n");
+		res = 0;
+		goto cleanup;
+	}
+
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
 		fprintf(stderr, "Error: Could not read file into input buffer.\n");
 		res = 0;
