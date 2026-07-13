@@ -27,7 +27,7 @@ int compress_bmp(const char* input_path, const char* output_path){
 	res = file_init(&file, input_path, output_path);
 	if (res != 1) return 0;
 
-	res = mem_init(&mem, input_path, block_size, meta.offset, 1, 0);
+	res = mem_init(&mem, block_size, meta.offset, 1, 0, file.input_size);
 	if (res != 1) return 0;
 	
 	uint8_t *inp_ptr = mem.inp_buf;
@@ -107,7 +107,7 @@ int decompress_bmp(const char* input_path, const char* output_path){
 	res = file_init(&file, input_path, output_path);
 	if (res != 1) return 0;
 
-	res = mem_init(&mem, input_path, block_size, meta.offset, 0, old_size);
+	res = mem_init(&mem, block_size, meta.offset, 0, old_size, file.input_size);
 	if (res != 1) return 0;
 
 	fseek(file.infile, meta.offset, SEEK_SET);

@@ -88,7 +88,7 @@ int compress_regular(const char* input_path, const char* output_path, const uint
 	res = file_init(&file, input_path, output_path);
 	if (res != 1) return 0;
 
-	res = mem_init(&mem, input_path, block_size, 0, 1, 0);
+	res = mem_init(&mem, block_size, 0, 1, 0, file.input_size);
 	if (res != 1) return 0;
 
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){
@@ -155,7 +155,7 @@ int decompress_regular(const char *input_path, const char* output_path){
 
 	size_t padded_size = ((meta.old_size + meta.block_size - 1) / meta.block_size) * meta.block_size;
 
-	res = mem_init(&mem, input_path, meta.block_size, offset, 0, padded_size);
+	res = mem_init(&mem, meta.block_size, offset, 0, padded_size, file.input_size);
 	if (res != 1) return 0;
 
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)){

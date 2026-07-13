@@ -16,7 +16,12 @@ int file_init(file_struct *file, const char* input_path, const char* output_path
 		goto cleanup;
 	}
 
+    long res = calc_file_size(input_path);
+    if (res == -1L) goto cleanup;
+    size_t input_size = (size_t)res;
+
 	file->infile = infile;
+    file->input_size = input_size;
 	file->outfile = outfile;
 
 	return 1;
@@ -27,14 +32,11 @@ cleanup:
 	return 0;
 }
 
-int mem_init(mem_struct *mem, const char* input_path, const uint8_t block_size, const size_t pixel_offset, const uint8_t compress_bool, const size_t old_size){
+int mem_init(mem_struct *mem, const uint8_t block_size, const size_t pixel_offset, const uint8_t compress_bool, const size_t old_size, const size_t input_size){
 	uint8_t *inp_buf = NULL;
 	uint8_t *out_buf = NULL;
 	
-	long res = calc_file_size(input_path);
-	if (res == -1L) goto cleanup;
-
-	size_t max_in_size = (size_t)(res - pixel_offset);
+	size_t max_in_size = (size_t)(input_size - pixel_offset);
 
 	inp_buf = malloc(max_in_size);
 	if (inp_buf == NULL){
