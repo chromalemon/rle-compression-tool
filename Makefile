@@ -17,9 +17,9 @@ LIB_SRCS = src/file.c src/bmp.c src/rle.c
 UNITY_DIR = external/Unity/src
 
 TEST_SRCS = tests/test_main.c \
-            tests_test_rle.c \
-            $(LIB_SRCS) \
-            $(UNITY_DIR)/unity.c
+	        tests_test_rle.c \
+	        $(LIB_SRCS) \
+	        $(UNITY_DIR)/unity.c
 
 TEST_TARGET = run_tests
 
@@ -34,12 +34,11 @@ src/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 test:
-
-    $(CC) $(CFLAGS) \
-    -I$(UNITY_DIR) \
-    $(TEST_SRCS) \
-    -o $(TEST_TARGET)
-    ./$(TEST_TARGET)
+	$(CC) $(CFLAGS) \
+	-I$(UNITY_DIR) \
+	$(TEST_SRCS) \
+	-o $(TEST_TARGET)
+	./$(TEST_TARGET)
 
 clean:
 	rm -f src/*.o $(TARGET) $(TEST_TARGET)
