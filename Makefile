@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror -std=gnu99 -Iinclude -O2
+SANITIZE_FLAGS = -fsanitize=address -fsanitize=undefined -g
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g -O0
@@ -34,7 +35,7 @@ src/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 test:
-	$(CC) $(CFLAGS) \
+	$(CC) $(CFLAGS) $(SANITIZE_FLAGS) \
 	-I$(UNITY_DIR) \
 	$(TEST_SRCS) \
 	-o $(TEST_TARGET)
