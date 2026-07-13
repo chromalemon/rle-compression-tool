@@ -17,7 +17,7 @@ LIB_SRCS = src/file.c src/bmp.c src/rle.c
 UNITY_DIR = external/Unity/src
 
 TEST_SRCS = tests/test_main.c \
-	        tests_test_rle.c \
+	        tests/test_rle.c \
 	        $(LIB_SRCS) \
 	        $(UNITY_DIR)/unity.c
 
