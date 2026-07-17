@@ -20,8 +20,6 @@ UNITY_DIR = external/Unity/src
 
 TEST_SRCS = tests/test_main.c \
 	        tests/test_rle.c \
-	        $(LIB_SRCS) \
-	        $(UNITY_DIR)/unity.c
 
 TEST_TARGET = run_tests
 
@@ -39,14 +37,16 @@ test:
 	$(CC) $(CFLAGS) $(SANITIZE_FLAGS) \
 	-I$(UNITY_DIR) \
 	$(TEST_SRCS) \
+	$(LIB_SRCS) \
+	$(UNITY_DIR)/unity.c \
 	-o $(TEST_TARGET)
 	./$(TEST_TARGET)
 
 format:
-	clang-format -i $(SRCS) $(HDRS)
+	clang-format -i $(SRCS) $(TEST_SRCS) $(HDRS)
 
 check-format:
-	clang-format --dry-run --Werror $(SRCS) $(HDRS)
+	clang-format --dry-run --Werror $(SRCS) $(TEST_SRCS) $(HDRS)
 
 lint:
 	clang-tidy $(SRCS) -checks=-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling -- $(CFLAGS)
