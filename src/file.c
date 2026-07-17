@@ -26,10 +26,14 @@ int file_init(file_struct *file, const char *input_path,
   return 1;
 
 cleanup:
-  if (file->infile)
+  if (file->infile) {
     fclose(file->infile);
-  if (file->outfile)
+    file->infile = NULL;
+  }
+  if (file->outfile) {
     fclose(file->outfile);
+    file->outfile = NULL
+  }
   return 0;
 }
 
@@ -64,10 +68,14 @@ int mem_init(mem_struct *mem, const uint8_t block_size,
   return 1;
 
 cleanup:
-  if (mem->inp_buf)
+  if (mem->inp_buf) {
     free(mem->inp_buf);
-  if (mem->out_buf)
+    mem->inp_buf = NULL;
+  }
+  if (mem->out_buf) {
     free(mem->out_buf);
+    mem->out_buf = NULL;
+  }
   return 0;
 }
 
