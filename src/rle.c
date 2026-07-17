@@ -196,7 +196,7 @@ cleanup:
     fclose(file.infile);
   if (file.outfile)
     fclose(file.outfile);
-  if (mem.inp_buf)
+  if (mem.inp_buf != NULL)
     free(mem.inp_buf);
   if (mem.out_buf)
     free(mem.out_buf);
