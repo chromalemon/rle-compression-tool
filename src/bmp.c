@@ -20,7 +20,7 @@ int compress_bmp(const char *input_path, const char *output_path) {
 	size_t unpadded_row_length = (meta.width * meta.BPP) / 8;
 	size_t total_padded_row_length = ((unpadded_row_length + 3) / 4) * 4;
 	uint8_t padding_bytes_to_skip =
-		total_padded_row_length - unpadded_row_length;
+		(uint8_t)total_padded_row_length - unpadded_row_length;
 	uint8_t block_size = meta.BPP / 8;
 
 	file_struct file = {0};
@@ -35,7 +35,11 @@ int compress_bmp(const char *input_path, const char *output_path) {
 		return 0;
 
 	uint8_t *inp_ptr = mem.inp_buf;
-	fseek(file.infile, meta.offset, SEEK_SET);
+	if (fseek(file.infile, meta.offset, SEEK_SET) != 0) {
+		fprintf(stderr, "Error: Fseek failed.\n");
+		res = 0;
+		goto cleanup;
+	}
 	for (uint32_t i = 0; i < meta.height; i++) {
 		if (!fread(inp_ptr, unpadded_row_length, 1, file.infile)) {
 			fprintf(stderr, "Error: Could not read pixels from input file.\n");
@@ -43,7 +47,11 @@ int compress_bmp(const char *input_path, const char *output_path) {
 			goto cleanup;
 		}
 		inp_ptr += unpadded_row_length;
-		fseek(file.infile, padding_bytes_to_skip, SEEK_CUR);
+		if (fseek(file.infile, padding_bytes_to_skip, SEEK_CUR) != 0) {
+			fprintf(stderr, "Error: Fseek failed.\n");
+			res = 0;
+			goto cleanup;
+		}
 	}
 
 	res = compress(&mem);
@@ -120,7 +128,11 @@ int decompress_bmp(const char *input_path, const char *output_path) {
 	if (res != 1)
 		return 0;
 
-	fseek(file.infile, meta.offset, SEEK_SET);
+	if (fseek(file.infile, meta.offset, SEEK_SET) != 0) {
+		fprintf(stderr, "Error: Fseek failed.\n");
+		res = 0;
+		goto cleanup;
+	}
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)) {
 		fprintf(stderr, "Error: Could not read file into input buffer.\n");
 		res = 0;
@@ -185,7 +197,10 @@ int read_meta(const char *path, BMP_meta *meta) {
 	int res = 0;
 
 	uint8_t sig_buf[2];
-	fseek(infile, 0, SEEK_SET);
+	if (fseek(infile, 0, SEEK_SET) != 0) {
+		fprintf(stderr, "Error: Fseek failed.\n");
+		goto cleanup;
+	}
 	if (fread(&sig_buf, 1, 2, infile) < 2) {
 		fprintf(stderr, "Error: Could not read file.\n");
 		goto cleanup;
@@ -196,7 +211,10 @@ int read_meta(const char *path, BMP_meta *meta) {
 		goto cleanup;
 	}
 
-	fseek(infile, 0, SEEK_SET);
+	if (fseek(infile, 0, SEEK_SET) != 0) {
+		fprintf(stderr, "Error: Fseek failed.\n");
+		goto cleanup;
+	}
 	if (!fread(meta, sizeof(BMP_meta), 1, infile)) {
 		fprintf(stderr, "Error: Could not parse BMP header.\n");
 		goto cleanup;
