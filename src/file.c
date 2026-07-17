@@ -1,107 +1,112 @@
 #include "file.h"
 
-int file_init(file_struct *file, const char* input_path, const char* output_path){
-	FILE *infile = NULL;
-	FILE *outfile = NULL;
+int file_init(file_struct *file, const char *input_path,
+              const char *output_path) {
+  FILE *infile = NULL;
+  FILE *outfile = NULL;
 
-	infile = fopen(input_path, "rb");
-	if (!infile){
-		fprintf(stderr, "Error: Could not open input file.\n");
-		goto cleanup;
-	}
+  infile = fopen(input_path, "rb");
+  if (!infile) {
+    fprintf(stderr, "Error: Could not open input file.\n");
+    goto cleanup;
+  }
 
-	outfile = fopen(output_path, "wb");
-	if (!outfile){
-		fprintf(stderr, "Error: Could not open output file.\n");
-		goto cleanup;
-	}
+  outfile = fopen(output_path, "wb");
+  if (!outfile) {
+    fprintf(stderr, "Error: Could not open output file.\n");
+    goto cleanup;
+  }
 
-    long res = calc_file_size(input_path);
-    if (res == -1L) goto cleanup;
-    size_t input_size = (size_t)res;
+  long res = calc_file_size(input_path);
+  if (res == -1L)
+    goto cleanup;
+  size_t input_size = (size_t)res;
 
-	file->infile = infile;
-    file->input_size = input_size;
-	file->outfile = outfile;
+  file->infile = infile;
+  file->input_size = input_size;
+  file->outfile = outfile;
 
-	return 1;
-
-cleanup:
-	if (infile) fclose(infile);
-	if (outfile) fclose(outfile);
-	return 0;
-}
-
-int mem_init(mem_struct *mem, const uint8_t block_size, const size_t pixel_offset, const uint8_t compress_bool, const size_t old_size, const size_t input_size){
-	uint8_t *inp_buf = NULL;
-	uint8_t *out_buf = NULL;
-	
-	size_t max_in_size = (size_t)(input_size - pixel_offset);
-
-	inp_buf = malloc(max_in_size);
-	if (inp_buf == NULL){
-		fprintf(stderr, "Error: Could not allocate memory for input buffer.\n");
-		goto cleanup;
-	}
-
-	size_t max_out_size = old_size;
-	if (compress_bool != 0){
-		max_out_size = max_in_size * 2;
-	}
-
-	out_buf = malloc(max_out_size);
-	if (out_buf == NULL){
-		fprintf(stderr, "Error: Could not allocate memory for output buffer.\n");
-		goto cleanup;
-	}
-
-	mem->inp_buf = inp_buf;
-	mem->max_in_size = max_in_size;
-	mem->out_buf = out_buf;
-	mem->out_ptr = out_buf;
-	mem->max_out_size = max_out_size;
-	mem->block_size = block_size;
-
-	return 1;
+  return 1;
 
 cleanup:
-	free(inp_buf);
-	free(out_buf);
-	return 0;
+  if (infile)
+    fclose(infile);
+  if (outfile)
+    fclose(outfile);
+  return 0;
 }
 
-long calc_file_size(const char* path){
-	FILE* fp = fopen(path, "rb");
-	if (!fp){
-		fprintf(stderr, "Error: Could not open file to calculate size.\n");
-		return -1L;
-	}
-	
-	if (fseek(fp, 0L, SEEK_END) != 0){
-		fprintf(stderr, "Error: Fseek failed.\n");
-		fclose(fp);
-		return -1L;
-	}
-	long size = ftell(fp);
-	if (size == -1L){
-		fprintf(stderr, "Error: Ftell failed.\n");
-	}
+int mem_init(mem_struct *mem, const uint8_t block_size,
+             const size_t pixel_offset, const uint8_t compress_bool,
+             const size_t old_size, const size_t input_size) {
+  uint8_t *inp_buf = NULL;
+  uint8_t *out_buf = NULL;
 
-	fclose(fp);
-	return size;
+  size_t max_in_size = (size_t)(input_size - pixel_offset);
 
+  inp_buf = malloc(max_in_size);
+  if (inp_buf == NULL) {
+    fprintf(stderr, "Error: Could not allocate memory for input buffer.\n");
+    goto cleanup;
+  }
+
+  size_t max_out_size = old_size;
+  if (compress_bool != 0) {
+    max_out_size = max_in_size * 2;
+  }
+
+  out_buf = malloc(max_out_size);
+  if (out_buf == NULL) {
+    fprintf(stderr, "Error: Could not allocate memory for output buffer.\n");
+    goto cleanup;
+  }
+
+  mem->inp_buf = inp_buf;
+  mem->max_in_size = max_in_size;
+  mem->out_buf = out_buf;
+  mem->out_ptr = out_buf;
+  mem->max_out_size = max_out_size;
+  mem->block_size = block_size;
+
+  return 1;
+
+cleanup:
+  free(inp_buf);
+  free(out_buf);
+  return 0;
 }
 
-void print_diff(const char* input_path, const char* output_path){
-	long original = calc_file_size(input_path);
-	long new = calc_file_size(output_path);
-	if (original == -1L || new == -1L){
-		return;
-	}
+long calc_file_size(const char *path) {
+  FILE *fp = fopen(path, "rb");
+  if (!fp) {
+    fprintf(stderr, "Error: Could not open file to calculate size.\n");
+    return -1L;
+  }
 
-	float ratio = ((float)new / original) * 100;
+  if (fseek(fp, 0L, SEEK_END) != 0) {
+    fprintf(stderr, "Error: Fseek failed.\n");
+    fclose(fp);
+    return -1L;
+  }
+  long size = ftell(fp);
+  if (size == -1L) {
+    fprintf(stderr, "Error: Ftell failed.\n");
+  }
 
-	printf("\nOriginal: %ld", original);
-	printf("\nNew: %ld", new);
-	printf("\nCompression ratio: %.2f%%\n", ratio);
+  fclose(fp);
+  return size;
+}
+
+void print_diff(const char *input_path, const char *output_path) {
+  long original = calc_file_size(input_path);
+  long new = calc_file_size(output_path);
+  if (original == -1L || new == -1L) {
+    return;
+  }
+
+  float ratio = ((float)new / original) * 100;
+
+  printf("\nOriginal: %ld", original);
+  printf("\nNew: %ld", new);
+  printf("\nCompression ratio: %.2f%%\n", ratio);
 }
