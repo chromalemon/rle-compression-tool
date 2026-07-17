@@ -1,0 +1,25 @@
+---
+
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  misc-*,
+  performance-*,
+  readability-avoid-const-params-in-decls,
+  readability-braces-around-statements,
+  readability-duplicate-include,
+  readability-identifier-naming
+
+WarningsAsErrors: '*'
+
+FormatStyle: file
+
+CheckOptions:
+  - key:             readability-identifier-naming.FunctionCase
+    value:           lower_case
+  - key:             readability-identifier-naming.VariableCase
+    value:           lower_case
+  - key:             readability-identifier-naming.ParameterCase
+    value:           lower_case
