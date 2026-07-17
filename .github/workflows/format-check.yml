@@ -12,7 +12,5 @@ jobs:
       - name: Run clang-format on all C files
         uses: jidicula/clang-format-action@v4.11.0
         with:
-          clang-format-version: '18' 
-          check-path: '.'
+          exclude-regex: 'external'
           include-regex: '.*\.(c|h)$' 
-
