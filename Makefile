@@ -10,7 +10,8 @@ endif
 
 TARGET = rle_tool
 
-SRCS = src/file.c src/bmp.c src/rle.c src/main.c
+SRCS = $(wildcard src/*.c)
+HDRS = $(wildcard include/*.h)
 OBJS = $(SRCS:.c=.o)
 
 LIB_SRCS = src/file.c src/bmp.c src/rle.c
@@ -24,7 +25,7 @@ TEST_SRCS = tests/test_main.c \
 
 TEST_TARGET = run_tests
 
-.PHONY: all clean test
+.PHONY: all clean test format check-format lint
 
 all: $(TARGET)
 
@@ -40,6 +41,15 @@ test:
 	$(TEST_SRCS) \
 	-o $(TEST_TARGET)
 	./$(TEST_TARGET)
+
+format:
+	clang-format -i $(SRCS) $(HDRS)
+
+check-format:
+	clang-format --dry-run --Werror $(SRCS) $(HDRS)
+
+lint:
+	clang-tidy $(SRCS) -- -I.
 
 clean:
 	rm -f src/*.o $(TARGET) $(TEST_TARGET)
