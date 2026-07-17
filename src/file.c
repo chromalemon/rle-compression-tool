@@ -41,7 +41,7 @@ int mem_init(mem_struct *mem, const uint8_t block_size,
 
   mem->max_in_size = (size_t)(input_size - pixel_offset);
 
-  mem->inp_buf = malloc(max_in_size);
+  mem->inp_buf = malloc(mem->max_in_size);
   if (mem->inp_buf == NULL) {
     fprintf(stderr, "Error: Could not allocate memory for input buffer.\n");
     goto cleanup;
@@ -52,13 +52,13 @@ int mem_init(mem_struct *mem, const uint8_t block_size,
     mem->max_out_size = mem->max_in_size * 2;
   }
 
-  mem->out_buf = malloc(max_out_size);
+  mem->out_buf = malloc(mem->max_out_size);
   if (mem->out_buf == NULL) {
     fprintf(stderr, "Error: Could not allocate memory for output buffer.\n");
     goto cleanup;
   }
 
-  mem->out_ptr = out_buf;
+  mem->out_ptr = mem->out_buf;
   mem->block_size = block_size;
 
   return 1;
