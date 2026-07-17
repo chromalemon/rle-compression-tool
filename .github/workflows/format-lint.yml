@@ -35,4 +35,6 @@ jobs:
       - name: Run clang-tidy static analysis
         run: |
           find . -type f \( -name "*.c" -o -name "*.h" \) ! -path "*/external/*" | \
-          xargs -I {} clang-tidy -p=. {}
+          xargs -I {} clang-tidy -p=. \
+            --extra-arg="-Iinclude" \
+            --extra-arg="-Iexternal/Unity/src" {}
