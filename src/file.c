@@ -4,6 +4,7 @@ int file_init(file_struct *file, const char *input_path,
 			  const char *output_path) {
 	file->infile = NULL;
 	file->outfile = NULL;
+	file->input_size = 0;
 
 	file->infile = fopen(input_path, "rb");
 	if (!file->infile) {

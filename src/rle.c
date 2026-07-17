@@ -1,5 +1,5 @@
-#include "file.h"
 #include "rle.h"
+#include "file.h"
 
 int compress(mem_struct *mem) {
 	uint8_t *curr_block = mem->inp_buf;
