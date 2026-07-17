@@ -32,7 +32,7 @@ cleanup:
   }
   if (file->outfile) {
     fclose(file->outfile);
-    file->outfile = NULL
+    file->outfile = NULL:
   }
   return 0;
 }
