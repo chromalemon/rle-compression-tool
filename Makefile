@@ -49,7 +49,7 @@ check-format:
 	clang-format --dry-run --Werror $(SRCS) $(HDRS)
 
 lint:
-	clang-tidy $(SRCS) -- -Iinclude
+	clang-tidy $(SRCS) $(CFLAGS)
 
 clean:
 	rm -f src/*.o $(TARGET) $(TEST_TARGET)
