@@ -2,17 +2,17 @@
 
 int file_init(file_struct *file, const char *input_path,
               const char *output_path) {
-  FILE *infile = NULL;
-  FILE *outfile = NULL;
+  file->infile = NULL;
+  file->outfile = NULL;
 
-  infile = fopen(input_path, "rb");
-  if (!infile) {
+  file->infile = fopen(input_path, "rb");
+  if (!file->infile) {
     fprintf(stderr, "Error: Could not open input file.\n");
     goto cleanup;
   }
 
-  outfile = fopen(output_path, "wb");
-  if (!outfile) {
+  file->outfile = fopen(output_path, "wb");
+  if (!file->outfile) {
     fprintf(stderr, "Error: Could not open output file.\n");
     goto cleanup;
   }
@@ -21,58 +21,53 @@ int file_init(file_struct *file, const char *input_path,
   if (res == -1L)
     goto cleanup;
   size_t input_size = (size_t)res;
-
-  file->infile = infile;
   file->input_size = input_size;
-  file->outfile = outfile;
 
   return 1;
 
 cleanup:
-  if (infile)
-    fclose(infile);
-  if (outfile)
-    fclose(outfile);
+  if (file->infile)
+    fclose(file->infile);
+  if (file->outfile)
+    fclose(file->outfile);
   return 0;
 }
 
 int mem_init(mem_struct *mem, const uint8_t block_size,
              const size_t pixel_offset, const uint8_t compress_bool,
              const size_t old_size, const size_t input_size) {
-  uint8_t *inp_buf = NULL;
-  uint8_t *out_buf = NULL;
+  mem->inp_buf = NULL;
+  mem->out_buf = NULL;
 
-  size_t max_in_size = (size_t)(input_size - pixel_offset);
+  mem->max_in_size = (size_t)(input_size - pixel_offset);
 
-  inp_buf = malloc(max_in_size);
-  if (inp_buf == NULL) {
+  mem->inp_buf = malloc(max_in_size);
+  if (mem->inp_buf == NULL) {
     fprintf(stderr, "Error: Could not allocate memory for input buffer.\n");
     goto cleanup;
   }
 
-  size_t max_out_size = old_size;
+  mem->max_out_size = old_size;
   if (compress_bool != 0) {
-    max_out_size = max_in_size * 2;
+    mem->max_out_size = mem->max_in_size * 2;
   }
 
-  out_buf = malloc(max_out_size);
-  if (out_buf == NULL) {
+  mem->out_buf = malloc(max_out_size);
+  if (mem->out_buf == NULL) {
     fprintf(stderr, "Error: Could not allocate memory for output buffer.\n");
     goto cleanup;
   }
 
-  mem->inp_buf = inp_buf;
-  mem->max_in_size = max_in_size;
-  mem->out_buf = out_buf;
   mem->out_ptr = out_buf;
-  mem->max_out_size = max_out_size;
   mem->block_size = block_size;
 
   return 1;
 
 cleanup:
-  free(inp_buf);
-  free(out_buf);
+  if (mem->inp_buf)
+    free(mem->inp_buf);
+  if (mem->out_buf)
+    free(mem->out_buf);
   return 0;
 }
 
