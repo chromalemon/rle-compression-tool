@@ -26,7 +26,6 @@ int compress_bmp(const char *input_path, const char *output_path) {
 		(uint8_t)total_padded_row_length - unpadded_row_length;
 	uint8_t block_size = meta.BPP / 8;
 
-
 	res = file_init(&file, input_path, output_path);
 	if (res != 1) {
 		res = 0;
@@ -123,7 +122,6 @@ int decompress_bmp(const char *input_path, const char *output_path) {
 	size_t old_size = total_padded_row_length * meta.height;
 	uint8_t block_size = meta.BPP / 8;
 	uint8_t zero = 0;
-
 
 	res = file_init(&file, input_path, output_path);
 	if (res != 1) {
