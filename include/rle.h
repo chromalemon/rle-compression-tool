@@ -2,11 +2,6 @@
 #define RLE_H
 
 #include "file.h"
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 int compress(mem_struct *mem);
 int write_to_buf(mem_struct *mem, const uint8_t count,

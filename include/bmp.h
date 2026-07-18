@@ -2,8 +2,6 @@
 #define BMP_H
 
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #pragma pack(push, 1)
 

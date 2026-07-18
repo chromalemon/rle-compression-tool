@@ -1,5 +1,10 @@
 #include "rle.h"
 #include "file.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 int compress(mem_struct *mem) {
 	uint8_t *curr_block = mem->inp_buf;
@@ -35,7 +40,7 @@ int compress(mem_struct *mem) {
 	return 1;
 
 err:
-	fprintf(stderr, "Error: Could not write to output buffer.\n");
+	(void)fprintf(stderr, "Error: Could not write to output buffer.\n");
 	return 0;
 }
 
@@ -43,7 +48,7 @@ int write_to_buf(mem_struct *mem, const uint8_t count,
 				 const uint8_t *prev_block) {
 	size_t curr_size = mem->out_ptr - mem->out_buf;
 	if (curr_size + 1 + mem->block_size > mem->max_out_size) {
-		fprintf(stderr, "Error: Output exceeded buffer size.\n");
+		(void)fprintf(stderr, "Error: Output exceeded buffer size.\n");
 		return 0;
 	}
 
@@ -64,7 +69,7 @@ int decompress(mem_struct *mem) {
 		for (uint8_t i = 0; i < *count; i++) {
 			size_t curr_size = mem->out_ptr - mem->out_buf;
 			if (curr_size + mem->block_size > mem->max_out_size) {
-				fprintf(stderr, "Error: Output exceeded buffer size.\n");
+				(void)fprintf(stderr, "Error: Output exceeded buffer size.\n");
 				return 0;
 			}
 
@@ -91,13 +96,14 @@ int compress_regular(const char *input_path, const char *output_path,
 		res = 0;
 		goto cleanup;
 	}
-	res = mem_init(&mem, block_size, 0, 1, 0, file.input_size);
+	res = mem_init(&mem, block_size, 0, 0, file.input_size);
 	if (res != 1) {
 		res = 0;
 		goto cleanup;
 	}
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)) {
-		fprintf(stderr, "Error: Could not read file into input buffer.\n");
+		(void)fprintf(stderr,
+					  "Error: Could not read file into input buffer.\n");
 		res = 0;
 		goto cleanup;
 	}
@@ -112,14 +118,15 @@ int compress_regular(const char *input_path, const char *output_path,
 	meta.block_size = block_size;
 	meta.old_size = mem.max_in_size;
 	if (!fwrite(&meta, sizeof(reg_meta), 1, file.outfile)) {
-		fprintf(stderr, "Error: Could not write metadata to output file.\n");
+		(void)fprintf(stderr,
+					  "Error: Could not write metadata to output file.\n");
 		res = 0;
 		goto cleanup;
 	}
 
 	size_t new_size = mem.out_ptr - mem.out_buf;
 	if (!fwrite(mem.out_buf, new_size, 1, file.outfile)) {
-		fprintf(stderr, "Error: Could not write payload to file.\n");
+		(void)fprintf(stderr, "Error: Could not write payload to file.\n");
 		res = 0;
 		goto cleanup;
 	}
@@ -128,14 +135,18 @@ int compress_regular(const char *input_path, const char *output_path,
 	goto cleanup;
 
 cleanup:
-	if (file.infile)
-		fclose(file.infile);
-	if (file.outfile)
-		fclose(file.outfile);
-	if (mem.inp_buf)
+	if (file.infile) {
+		(void)fclose(file.infile);
+	}
+	if (file.outfile) {
+		(void)fclose(file.outfile);
+	}
+	if (mem.inp_buf) {
 		free(mem.inp_buf);
-	if (mem.out_buf)
+	}
+	if (mem.out_buf) {
 		free(mem.out_buf);
+	}
 	return res;
 }
 
@@ -153,14 +164,16 @@ int decompress_regular(const char *input_path, const char *output_path) {
 	reg_meta meta = {0};
 
 	if (!fread(&meta, sizeof(reg_meta), 1, file.infile)) {
-		fprintf(stderr, "Error: Could not read metadata from input file.\n");
+		(void)fprintf(stderr,
+					  "Error: Could not read metadata from input file.\n");
 		res = 0;
 		goto cleanup;
 	}
 
 	if (memcmp("RLE!", &meta.signature, 4) != 0) {
-		fprintf(stderr,
-				"Error: Input file has not been compressed with this tool.\n");
+		(void)fprintf(
+			stderr,
+			"Error: Input file has not been compressed with this tool.\n");
 		res = 0;
 		goto cleanup;
 	}
@@ -171,15 +184,15 @@ int decompress_regular(const char *input_path, const char *output_path) {
 		((meta.old_size + meta.block_size - 1) / meta.block_size) *
 		meta.block_size;
 
-	res = mem_init(&mem, meta.block_size, offset, 0, padded_size,
-				   file.input_size);
+	res = mem_init(&mem, meta.block_size, offset, padded_size, file.input_size);
 	if (res != 1) {
 		res = 0;
 		goto cleanup;
 	}
 
 	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)) {
-		fprintf(stderr, "Error: Could not read file into input buffer.\n");
+		(void)fprintf(stderr,
+					  "Error: Could not read file into input buffer.\n");
 		res = 0;
 		goto cleanup;
 	}
@@ -190,7 +203,7 @@ int decompress_regular(const char *input_path, const char *output_path) {
 		goto cleanup;
 	}
 	if (!fwrite(mem.out_buf, meta.old_size, 1, file.outfile)) {
-		fprintf(stderr, "Error: Could not write payload to file.\n");
+		(void)fprintf(stderr, "Error: Could not write payload to file.\n");
 		res = 0;
 		goto cleanup;
 	}
@@ -199,13 +212,17 @@ int decompress_regular(const char *input_path, const char *output_path) {
 	goto cleanup;
 
 cleanup:
-	if (file.infile)
-		fclose(file.infile);
-	if (file.outfile)
-		fclose(file.outfile);
-	if (mem.inp_buf)
+	if (file.infile) {
+		(void)fclose(file.infile);
+	}
+	if (file.outfile) {
+		(void)fclose(file.outfile);
+	}
+	if (mem.inp_buf) {
 		free(mem.inp_buf);
-	if (mem.out_buf)
+	}
+	if (mem.out_buf) {
 		free(mem.out_buf);
+	}
 	return res;
 }

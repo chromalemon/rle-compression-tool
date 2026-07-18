@@ -1,6 +1,8 @@
 #include "file.h"
 #include "rle.h"
 #include "unity.h"
+#include <stdlib.h>
+#include <string.h>
 
 void setUp(void) {
 	// Runs before every test

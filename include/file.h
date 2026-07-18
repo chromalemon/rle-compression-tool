@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #pragma pack(push, 1)
 typedef struct {
@@ -35,7 +34,7 @@ int file_init(file_struct *file, const char *input_path,
 			  const char *output_path);
 
 int mem_init(mem_struct *mem, const uint8_t block_size,
-			 const size_t pixel_offset, const uint8_t compress_bool,
-			 const size_t old_size, const size_t input_size);
+			 const size_t pixel_offset, const size_t old_size,
+			 const size_t input_size);
 
 #endif

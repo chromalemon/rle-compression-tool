@@ -6,11 +6,13 @@ Checks: >
   cert-*,
   clang-analyzer-*,
   misc-*,
+  -misc-include-cleaner,
+  -bugprone-easily-swappable-parameters,
   performance-*,
   readability-avoid-const-params-in-decls,
   readability-braces-around-statements,
   readability-duplicate-include,
-  readability-identifier-naming
+  readability-identifier-naming,
 
 WarningsAsErrors: '*'
 

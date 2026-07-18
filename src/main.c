@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <unistd.h> // IWYU pragma: keep
 
 int main(int argc, char *argv[]) {
 	int opt;
@@ -31,20 +31,22 @@ int main(int argc, char *argv[]) {
 			decompress = 1;
 			break;
 		case 'b':
-			if (format)
+			if (format) {
 				dupe = 1;
+			}
 			format = 'B';
 			is_file = 1;
 			break;
 		case 'r':
-			if (format)
+			if (format) {
 				dupe = 1;
+			}
 			format = 'R';
 			is_file = 1;
 			if (optarg != 0) {
 				long temp = strtol(optarg, NULL, 10);
 				if (temp < 1 || temp > 8) {
-					fprintf(stderr, "Error: Invalid word size.\n");
+					(void)fprintf(stderr, "Error: Invalid word size.\n");
 					exit(EXIT_FAILURE);
 				}
 				block_size = (uint8_t)temp;
@@ -53,38 +55,38 @@ int main(int argc, char *argv[]) {
 		case 's':
 			silence = 1;
 			break;
-		case 'h':
-			break;
 		default:
 			break;
 		}
 	}
 	if (dupe) {
-		fprintf(stderr,
-				"Error: Expected one file format, received multiple.\n");
+		(void)fprintf(stderr,
+					  "Error: Expected one file format, received multiple.\n");
 		exit(EXIT_FAILURE);
 	}
 
 	if (fail) {
-		fprintf(stderr, "Error: Unknown argument.\n");
+		(void)fprintf(stderr, "Error: Unknown argument.\n");
 		exit(EXIT_FAILURE);
 	}
 
 	if (compress == decompress) {
-		fprintf(stderr,
-				"Error: Expected one of -c and -d, received multiple.\n");
+		(void)fprintf(stderr,
+					  "Error: Expected one of -c and -d, received multiple.\n");
 		exit(EXIT_FAILURE);
 	}
 
 	if (format == 0) {
-		fprintf(stderr,
-				"Error: Expected one input/output format, received none.\n");
+		(void)fprintf(
+			stderr,
+			"Error: Expected one input/output format, received none.\n");
 		exit(EXIT_FAILURE);
 	}
 
 	if (optind + 2 != argc) {
-		fprintf(stderr, "Error: Expected exactly two additional arguments of "
-						"input/output paths.\n");
+		(void)fprintf(stderr,
+					  "Error: Expected exactly two additional arguments of "
+					  "input/output paths.\n");
 		exit(EXIT_FAILURE);
 	}
 

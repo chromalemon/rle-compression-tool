@@ -49,7 +49,8 @@ check-format:
 	clang-format --dry-run --Werror $(SRCS) $(TEST_SRCS) $(HDRS)
 
 lint:
-	clang-tidy $(SRCS) -checks=-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling -- $(CFLAGS)
-
+	@for file in $(SRCS); do \
+		clang-tidy --warnings-as-errors='*' $$file -checks=-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling -- $(CFLAGS); \
+	done
 clean:
 	rm -f src/*.o $(TARGET) $(TEST_TARGET)
