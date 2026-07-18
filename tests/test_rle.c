@@ -14,7 +14,7 @@ void tearDown(void) {
 
 void test_single_character_compression(void) {
 	mem_struct mem;
-	int res = mem_init(&mem, 1, 0, 1, 0, 1);
+	int res = mem_init(&mem, 1, 0, 0, 1);
 	TEST_ASSERT_EQUAL_INT(1, res);
 
 	unsigned char str[1] = {'A'};
@@ -35,7 +35,7 @@ cleanup:
 
 void test_single_character_decompression(void) {
 	mem_struct mem;
-	int res = mem_init(&mem, 1, 0, 0, 1, 2);
+	int res = mem_init(&mem, 1, 0, 1, 2);
 	TEST_ASSERT_EQUAL_INT(1, res);
 
 	unsigned char str[2] = {1, 'A'};
@@ -55,7 +55,7 @@ cleanup:
 
 void test_no_repeat_compression(void) {
 	mem_struct mem;
-	int res = mem_init(&mem, 1, 0, 1, 0, 6);
+	int res = mem_init(&mem, 1, 0, 0, 6);
 	TEST_ASSERT_EQUAL_INT(1, res);
 
 	unsigned char str[6] = {'A', 'B', 'C', 'D', 'E', 'F'};
@@ -77,7 +77,7 @@ cleanup:
 
 void test_no_repeat_decompression(void) {
 	mem_struct mem;
-	int res = mem_init(&mem, 1, 0, 0, 6, 12);
+	int res = mem_init(&mem, 1, 0, 6, 12);
 	TEST_ASSERT_EQUAL_INT(1, res);
 
 	unsigned char str[12] = {1, 'A', 1, 'B', 1, 'C', 1, 'D', 1, 'E', 1, 'F'};
