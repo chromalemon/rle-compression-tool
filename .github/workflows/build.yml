@@ -1,0 +1,30 @@
+name: CI Pipeline (Build, Test, Format & Lint)
+
+on: [push, pull_request]
+
+jobs:
+  ci-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Verify Formatting Style
+        run: cmake --build build --target check-format
+
+      - name: Run Clang-Tidy Linter
+        run: cmake --build build --target lint
+
+      - name: Build project
+        run: cmake --build build
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
