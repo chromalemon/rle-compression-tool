@@ -26,6 +26,13 @@ Compression ratio: 7.54%
 
 # Installation & Running
 
+Install dependencies:
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake -y
+```
+
 Clone the repository:
 
 ```bash
@@ -36,13 +43,20 @@ cd rle-compression-tool
 Compile the required files:
 
 ```bash
-make
+cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
 ```
 
 Run the program:
 
 ```bash
-./rle_tool [OPTION]... SOURCE DEST
+build/rle_tool [OPTION]... SOURCE DEST
+```
+
+Cleaning build artifacts:
+
+```bash
+rm -rf build
 ```
 
 **Options:**
