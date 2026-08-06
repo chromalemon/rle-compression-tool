@@ -71,10 +71,10 @@ rm -rf build
 
 ```bash
 # Compress BMP file.
-- ./rle_tool -c -b input.bmp output.bmp
+- build/rle_tool -c -b input.bmp output.bmp
 
 # Compress regular file with word size of 3 bytes, silenced.
-- ./rle_tool -c -r3 -s input.txt output.rle
+- build/rle_tool -c -r3 -s input.txt output.rle
 ```
 
 ## Creating BMP Files
