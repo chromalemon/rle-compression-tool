@@ -12,7 +12,6 @@ A modular lossless compression utility in C supporting generic binary streams an
 - Padding handling
 - Automated tests
 - Sanitizers
-- CI
 
 **Compression Example**
 
