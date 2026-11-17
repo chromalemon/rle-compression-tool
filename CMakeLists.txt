@@ -32,6 +32,8 @@ enable_testing()
 set(TEST_SRCS
 	tests/test_main.c
 	tests/test_rle.c
+	tests/test_edge_cases.c
+	tests/test_files.c
 	external/Unity/src/unity.c
 )
 

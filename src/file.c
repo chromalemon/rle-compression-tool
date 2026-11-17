@@ -48,9 +48,16 @@ int mem_init(mem_struct *mem, const uint8_t block_size,
 	mem->inp_buf = NULL;
 	mem->out_buf = NULL;
 
-	mem->max_in_size = (size_t)(input_size - pixel_offset);
+	// a file shorter than its header would underflow the size below
+	if (input_size < pixel_offset) {
+		(void)fprintf(stderr, "Error: Input is smaller than its header.\n");
+		return 0;
+	}
+	mem->max_in_size = input_size - pixel_offset;
 
-	mem->inp_buf = malloc(mem->max_in_size);
+	// malloc(0) may return NULL, so always ask for at least one byte;
+	// this lets empty inputs go through the normal path
+	mem->inp_buf = malloc(mem->max_in_size > 0 ? mem->max_in_size : 1);
 	if (mem->inp_buf == NULL) {
 		(void)fprintf(stderr,
 					  "Error: Could not allocate memory for input buffer.\n");
@@ -63,7 +70,7 @@ int mem_init(mem_struct *mem, const uint8_t block_size,
 		mem->max_out_size = old_size;
 	}
 
-	mem->out_buf = malloc(mem->max_out_size);
+	mem->out_buf = malloc(mem->max_out_size > 0 ? mem->max_out_size : 1);
 	if (mem->out_buf == NULL) {
 		(void)fprintf(stderr,
 					  "Error: Could not allocate memory for output buffer.\n");

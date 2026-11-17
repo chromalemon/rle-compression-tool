@@ -1,4 +1,5 @@
 Todo:
 - Add -h menu
 - Add TGA file format
+- Add PackBits
 

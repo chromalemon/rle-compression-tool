@@ -24,10 +24,10 @@ int compress_bmp(const char *input_path, const char *output_path) {
 		goto cleanup;
 	}
 
-	size_t unpadded_row_length = (meta.width * meta.BPP) / 8;
+	size_t unpadded_row_length = ((size_t)meta.width * meta.BPP) / 8;
 	size_t total_padded_row_length = ((unpadded_row_length + 3) / 4) * 4;
 	uint8_t padding_bytes_to_skip =
-		(uint8_t)total_padded_row_length - unpadded_row_length;
+		(uint8_t)(total_padded_row_length - unpadded_row_length);
 	uint8_t block_size = meta.BPP / 8;
 
 	res = file_init(&file, input_path, output_path);
@@ -61,13 +61,17 @@ int compress_bmp(const char *input_path, const char *output_path) {
 		}
 	}
 
+	// only compress the pixel bytes that were actually read; the rest of
+	// the buffer (where the padding would have gone) is uninitialised
+	mem.max_in_size = (size_t)(inp_ptr - mem.inp_buf);
+
 	res = compress(&mem);
 	if (res != 1) {
 		res = 0;
 		goto cleanup;
 	}
 	size_t new_size = mem.out_ptr - mem.out_buf;
-	if (new_size + 54 > UINT32_MAX) {
+	if (new_size + sizeof(BMP_meta) > UINT32_MAX) {
 		(void)fprintf(stderr, "Error: Compressed file too large for BMP3.\n");
 		res = 0;
 		goto cleanup;
@@ -83,7 +87,7 @@ int compress_bmp(const char *input_path, const char *output_path) {
 		goto cleanup;
 	}
 
-	if (!fwrite(mem.out_buf, new_size, 1, file.outfile)) {
+	if (fwrite(mem.out_buf, 1, new_size, file.outfile) != new_size) {
 		(void)fprintf(stderr, "Error: Could not write payload to file.\n");
 		res = 0;
 		goto cleanup;
@@ -126,13 +130,23 @@ int decompress_bmp(const char *input_path, const char *output_path) {
 		goto cleanup;
 	}
 
-	size_t unpadded_row_length = (meta.width * meta.BPP) / 8;
+	size_t unpadded_row_length = ((size_t)meta.width * meta.BPP) / 8;
 	size_t total_padded_row_length = ((unpadded_row_length + 3) / 4) * 4;
 	uint8_t padding_bytes_to_skip =
-		total_padded_row_length - unpadded_row_length;
-	size_t old_size = total_padded_row_length * meta.height;
+		(uint8_t)(total_padded_row_length - unpadded_row_length);
+	// pixel data is stored without padding, so this is what it must
+	// decompress to
+	size_t old_size = unpadded_row_length * meta.height;
+	size_t padded_pixel_size = total_padded_row_length * meta.height;
 	uint8_t block_size = meta.BPP / 8;
-	uint8_t zero = 0;
+	// padding is at most 3 bytes per row
+	static const uint8_t zeros[3] = {0};
+
+	if (padded_pixel_size + sizeof(BMP_meta) > UINT32_MAX) {
+		(void)fprintf(stderr, "Error: Image dimensions too large for BMP3.\n");
+		res = 0;
+		goto cleanup;
+	}
 
 	res = file_init(&file, input_path, output_path);
 	if (res != 1) {
@@ -149,7 +163,8 @@ int decompress_bmp(const char *input_path, const char *output_path) {
 		res = 0;
 		goto cleanup;
 	}
-	if (!fread(mem.inp_buf, mem.max_in_size, 1, file.infile)) {
+	if (fread(mem.inp_buf, 1, mem.max_in_size, file.infile) !=
+		mem.max_in_size) {
 		(void)fprintf(stderr,
 					  "Error: Could not read file into input buffer.\n");
 		res = 0;
@@ -161,9 +176,18 @@ int decompress_bmp(const char *input_path, const char *output_path) {
 		res = 0;
 		goto cleanup;
 	}
+
+	// the header's width and height must match the pixel data exactly
 	size_t new_size = mem.out_ptr - mem.out_buf;
-	uint32_t file_size = (uint32_t)(new_size + sizeof(BMP_meta));
-	meta.file_size = file_size;
+	if (new_size != old_size) {
+		(void)fprintf(stderr,
+					  "Error: Pixel data does not match image dimensions.\n");
+		res = 0;
+		goto cleanup;
+	}
+
+	// the restored file contains padding again, so count it in the size
+	meta.file_size = (uint32_t)(padded_pixel_size + sizeof(BMP_meta));
 	meta.compression = 0;
 
 	if (!fwrite(&meta, sizeof(BMP_meta), 1, file.outfile)) {
@@ -172,20 +196,23 @@ int decompress_bmp(const char *input_path, const char *output_path) {
 		goto cleanup;
 	}
 
+	// walk a separate pointer so mem.out_buf still points at the start of
+	// the allocation when it is freed
+	const uint8_t *row = mem.out_buf;
 	for (uint32_t i = 0; i < meta.height; i++) {
-		if (!fwrite(mem.out_ptr, unpadded_row_length, 1, file.outfile)) {
+		if (fwrite(row, 1, unpadded_row_length, file.outfile) !=
+			unpadded_row_length) {
 			(void)fprintf(stderr, "Error: Could not write payload to file.\n");
 			res = 0;
 			goto cleanup;
 		}
-		mem.out_ptr += unpadded_row_length;
-		if (fwrite(&zero, 1, padding_bytes_to_skip, file.outfile) <
+		row += unpadded_row_length;
+		if (fwrite(zeros, 1, padding_bytes_to_skip, file.outfile) <
 			padding_bytes_to_skip) {
 			(void)fprintf(stderr, "Error: Could not write payload to file.\n");
 			res = 0;
 			goto cleanup;
 		}
-		mem.out_ptr += padding_bytes_to_skip;
 	}
 
 	res = 1;
